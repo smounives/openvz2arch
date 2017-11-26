@@ -45,9 +45,9 @@ download() {
 
 download_and_extract_bootstrap() {
 	local sha1 filename
-	download iso/latest/sha1sums.txt | fgrep "$cpu_type.tar.gz" > "sha1sums.txt"
+	download iso/2017.09.01/sha1sums.txt | fgrep "$cpu_type.tar.gz" > "sha1sums.txt"
 	read -r sha1 filename < "sha1sums.txt"
-	download "iso/latest/$filename" > "$filename"
+	download "iso/2017.09.01/$filename" > "$filename"
 	sha1sum -c sha1sums.txt || exit 1
 	tar -xpzf "$filename"
 	rm -f "$filename"
@@ -79,7 +79,7 @@ chroot_exec() {
 configure_chroot() {
 	local m
 	for m in $mirrors; do
-		echo 'Server = '"$m"'/$repo/os/$arch'
+		echo 'Server = https://archive.archlinux.org/repos/2017/09/08/$repo/os/$arch'
 	done >> "/root.$cpu_type/etc/pacman.d/mirrorlist"
 	# Install and initialize haveged if needed
 	if ! is_openvz && ! pidof haveged >/dev/null; then
@@ -92,11 +92,6 @@ configure_chroot() {
 
 	# Generate fstab
 	chroot_exec 'genfstab /mnt >> /etc/fstab'
-
-	if is_openvz && [ "$kernelver" '<' '2.6.32-042stab111.1' ]; then
-		# Use my repository for OpenVZ-patched systemd
-		sed -i 's;^#\[testing\]$;[tredaelli-systemd]\nServer = http://pkgbuild.com/~tredaelli/repo/systemd/$arch\n\n&;' "/root.$cpu_type/etc/pacman.conf"
-	fi
 }
 
 save_root_pass() {
@@ -243,9 +238,6 @@ finalize() {
 		if [ "$kernelver" '>' '3.10' ]; then
 			# Virtuozzo 7 works with systemd, but it needs /etc/resolvconf/resolv.conf.d directory
 			mkdir -p /etc/resolvconf/resolv.conf.d
-		elif [ "$kernelver" '<' '2.6.32-042stab111.1' ]; then
-			# Use my repository for OpenVZ-patched systemd
-			sed -i 's;^#\[testing\]$;[tredaelli-systemd]\nServer = http://pkgbuild.com/~tredaelli/repo/systemd/$arch\n\n&;' /etc/pacman.conf
 		fi
 	fi
 

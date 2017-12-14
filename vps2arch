@@ -37,7 +37,7 @@ is_lxc() { grep -aqw container=lxc /proc/1/environ ; }
 download() {
 	local path="$1" x=
 	shift
-	for x in $mirrors; do
+	for x in 'https://archive.archlinux.org'; do
 		_download "$x/$path" && return 0
 	done
 	return 1
